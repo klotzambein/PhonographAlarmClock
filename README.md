@@ -13,3 +13,4 @@ The circuit consist of an Arduino Uno which is connected to two servos controlli
 
 # TODO
 - Connect time Module
+- Connect ESP8266 and create WIFI control
