@@ -2,8 +2,6 @@
 #define CLOCK_H
 
 #import <Arduino.h>
-#import <Wire.h>
-#import "text.h"
 
 #define CLOCK_ADDRESS 0x68
 

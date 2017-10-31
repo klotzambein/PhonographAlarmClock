@@ -1,5 +1,8 @@
 #import "clock.h"
 
+#import <Wire.h>
+#import "text.h"
+
 void writeToClock(uint8_t addr, const uint8_t *data, uint16_t size)
 {
     Wire.beginTransmission(CLOCK_ADDRESS);
