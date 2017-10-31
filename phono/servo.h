@@ -5,10 +5,10 @@
 #define SERVO_MAX_DUTY 130    // the longest duty cycle of a 50hz servo
 #define SERVO_DEFAULT_DUTY 80 // the default duty cycle of a 50hz servo
 
-#define SERVO_SET(num, duty) SetServoTarget(&servo##num, duty);                        // Set servo duty cycle
-#define SERVO_CREATE(num, startDuty) Servo servo##num = SERVO(startDuty);              //Define servo var
-#define SERVO_INIT(num) Timer1.pwm(PIN_SERVO##num, 0);                                 // init servo with timer1 (PIN_SERVOx has to exist)
-#define SERVO_UPDATE(num) Timer1.setPwmDuty(PIN_SERVO##num, UpdateServo(&servo##num)); //Update servo in timer tick (PIN_SERVOx has to exist)
+//#define SERVO_SET(num, duty) SetServoTarget(&servo##num, duty);                        // Set servo duty cycle
+//#define SERVO_CREATE(num, startDuty) Servo servo##num = SERVO(startDuty);              //Define servo var
+//#define SERVO_INIT(num) Timer1.pwm(PIN_SERVO##num, 0);                                 // init servo with timer1 (PIN_SERVOx has to exist)
+//#define SERVO_UPDATE(num) Timer1.setPwmDuty(PIN_SERVO##num, UpdateServo(&servo##num)); //Update servo in timer tick (PIN_SERVOx has to exist)
 
 typedef struct
 {

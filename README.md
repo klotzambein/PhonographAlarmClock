@@ -6,10 +6,12 @@ An Arduino build into a phonograph to wake me up
 The circuit consist of an Arduino Uno which is connected to two servos controlling the Arm of the phonograph. It is an old Dual phonograph. 
 
 ## Arduino Pins
-| Pin | Description      |
-|-----|------------------|
-| 9   | Up/Down Servo    |
-| 10  | Left/Right Servo |
+| Pin | Description         |
+|-----|---------------------|
+| 9   | Up/Down Servo       |
+| 10  | Left/Right Servo    |
+| A4  | I2C SDA Clock+Flash |
+| A5  | I2C SCL Clock+Flash |
 
 # TODO
 - Connect time Module
