@@ -14,3 +14,6 @@ The circuit consist of an Arduino Uno which is connected to two servos controlli
 # TODO
 - Connect time Module
 - Connect ESP8266 and create WIFI control
+
+# Notes
+- CPU on Phonograph: [Datasheet](http://datasheetz.com/data/Integrated%20Circuits%20(ICs)/Microcontrollers/D13008F25V-datasheetz.html)

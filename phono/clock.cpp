@@ -25,16 +25,12 @@ void settupClock(bool enable, Time *time, bool sqwDefault, bool sqwEnable, uint8
 
 void readClock(Time *time)
 {
-    Serial.println("a");
     Wire.beginTransmission(CLOCK_ADDRESS);
     Wire.write(0);
-    Serial.println("a2");
     Wire.endTransmission();
 
-    Serial.println("b");
     Wire.requestFrom(CLOCK_ADDRESS, 7);
-
-    Serial.println("c");
+    
     time->seconds = Wire.read() & 0x7F;
     time->minutes = Wire.read() & 0x7F;
     time->hours = Wire.read() & 0x3F;
