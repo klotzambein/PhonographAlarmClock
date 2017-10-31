@@ -6,8 +6,11 @@
 #import "text.h"
 
 uint8_t to5bitChar(char c);
-uint8_t compareChars(int5551_t char5bit, char a, char b, char c);
-inline bool checkPage(char *addr, uint8_t page);
+char toNormalChar(uint8_t c);
+bool get_isPageFree(uint8_t page);
+bool get_nxtPage(uint8_t page);
+void get_5biChars(uint8_t *buffer, uint8_t page);
+bool checkFile(char *addr, uint8_t page);
 
 FilePages filePages[64];
 
@@ -23,6 +26,48 @@ int findFile(char *addr)
     return -1;
 }
 
+void deleteFile(uint8_t page)
+{
+    uint8_t nxt;
+    while (true)
+    {
+        filePages[page].cbaFre &= 0x0001;
+        nxt = get_nxtPage(page);
+        if (nxt == page)
+            break;
+        filePages[page].kjNxt = (filePages[page].kjNxt & 0xFFC0) | page;
+        page = nxt;
+    }
+    saveFilePages();
+}
+
+int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength)
+{
+    uint8_t buffer[11];
+    get_5biChars(&buffer[0], page);
+
+    int maxI = (maxLength < 11) ? maxLength : 11;
+    for (int i = 0; i < maxI; i++)
+        *str++ = toNormalChar(buffer[i]);
+
+    uint8_t nxt = get_nxtPage(page);
+    if (nxt == page)
+        return 12;
+    return sprintFileAddress(str, nxt, maxLength - 12);
+}
+
+void saveFilePages()
+{
+    EEPROM.put(FILE_PAGES_EEPROM_ADDRESS, filePages);
+}
+
+void loadFilePages()
+{
+    EEPROM.get(FILE_PAGES_EEPROM_ADDRESS, filePages);
+}
+
+//------------------------------------
+
 bool checkFile(char *addr, uint8_t page)
 {
     uint8_t buffer[11];
@@ -30,49 +75,39 @@ bool checkFile(char *addr, uint8_t page)
 
     for (int i = 0; i < 11; i++)
     {
-        if (*(addr + i) == 0 && buffer[i] == 0)
+        if (*(addr + i) != to5bitChar(buffer[i]))
+            return false;
+        if (buffer[i] == 0)
             return true;
-        if ()
     }
-
-    uint8_t x = compareChars(filePages[page].cbaFre, *addr, *(addr + 1), *(addr + 2));
-    if (x != 1)
-        return x;
-    uint8_t y = compareChars(filePages[page].fed, *(addr + 3), *(addr + 4), *(addr + 5));
-    if (y != 1)
-        return y;
-    uint8_t z = compareChars(filePages[page].ihg, *(addr + 6), *(addr + 7), *(addr + 8));
-    if (z != 1)
-        return z;
-    uint8_t w = compareChars(filePages[page].kjNxt & 0xFFC0, *(addr + 9), *(addr + 10), 0);
-    if (w == 3) // Complete match
-        return true;
 
     uint8_t nxt = get_nxtPage(page);
     if (nxt == page)
-        return false;
+        return *(addr + 12) == 0;
     return checkFile(addr + 11, nxt);
 }
 
-uint8_t compareChars(int5551_t char5bit, char a, char b, char c)
+bool get_isPageFree(uint8_t page)
 {
-    if (to5bitChar(a) == (char5bit >> 1 & 0x1F))
-    {
-        if (a == 0)
-            return 2;
-        if (to5bitChar(b) == (char5bit >> 6 & 0x1F))
-        {
-            if (b == 0)
-                return 3;
-            if (to5bitChar(c) == (char5bit >> 11 & 0x1F))
-            {
-                if (c == 0)
-                    return 4;
-                return 1;
-            }
-        }
-    }
-    return 0;
+    return filePages[page].cbaFre & 0x0001;
+}
+bool get_nxtPage(uint8_t page)
+{
+    return filePages[page].kjNxt & 0x003F;
+}
+void get_5biChars(uint8_t *buffer, uint8_t page)
+{
+    buffer[0] = filePages[page].cbaFre >> 1 & 0x1F;
+    buffer[1] = filePages[page].cbaFre >> 6 & 0x1F;
+    buffer[2] = filePages[page].cbaFre >> 11 & 0x1F;
+    buffer[3] = filePages[page].fed >> 1 & 0x1F;
+    buffer[4] = filePages[page].fed >> 6 & 0x1F;
+    buffer[5] = filePages[page].fed >> 11 & 0x1F;
+    buffer[6] = filePages[page].ihg >> 1 & 0x1F;
+    buffer[7] = filePages[page].ihg >> 6 & 0x1F;
+    buffer[8] = filePages[page].ihg >> 11 & 0x1F;
+    buffer[9] = filePages[page].kjNxt >> 1 & 0x1F;
+    buffer[10] = filePages[page].kjNxt >> 6 & 0x1F;
 }
 
 uint8_t to5bitChar(char c)
@@ -226,59 +261,4 @@ char toNormalChar(uint8_t c)
     case 0:
         return 0;
     }
-}
-
-void get_5biChars(uint8_t *buffer, uint8_t page)
-{
-    buffer[0] = filePages[page].cbaFre >> 1 & 0x1F;
-    buffer[1] = filePages[page].cbaFre >> 6 & 0x1F;
-    buffer[2] = filePages[page].cbaFre >> 11 & 0x1F;
-    buffer[3] = filePages[page].fed >> 1 & 0x1F;
-    buffer[4] = filePages[page].fed >> 6 & 0x1F;
-    buffer[5] = filePages[page].fed >> 11 & 0x1F;
-    buffer[6] = filePages[page].ihg >> 1 & 0x1F;
-    buffer[7] = filePages[page].ihg >> 6 & 0x1F;
-    buffer[8] = filePages[page].ihg >> 11 & 0x1F;
-    buffer[9] = filePages[page].kjNxt >> 1 & 0x1F;
-    buffer[10] = filePages[page].kjNxt >> 6 & 0x1F;
-}
-
-void deleteFile(uint8_t page)
-{
-    uint8_t nxt;
-    while (true)
-    {
-        filePages[page].cbaFre &= 0x0001;
-        nxt = get_nxtPage(page);
-        if (nxt == page)
-            break;
-        filePages[page].kjNxt = (filePages[page].kjNxt & 0xFFC0) | page;
-        page = nxt;
-    }
-    saveFilePages();
-}
-
-int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength)
-{
-    uint8_t buffer[11];
-    get_5biChars(&buffer[0], page);
-
-    int maxI = (maxLength < 11) ? maxLength : 11;
-    for (int i = 0; i < maxI; i++)
-        *str++ = toNormalChar(buffer[i]);
-
-    uint8_t nxt = get_nxtPage(page);
-    if (nxt == page)
-        return 12;
-    return sprintFileAddress(str, nxt, maxLength - 12);
-}
-
-void saveFilePages()
-{
-    EEPROM.put(FILE_PAGES_EEPROM_ADDRESS, filePages);
-}
-
-void loadFilePages()
-{
-    EEPROM.get(FILE_PAGES_EEPROM_ADDRESS, filePages);
 }

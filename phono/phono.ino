@@ -24,17 +24,15 @@ void setup()
     Timer1.pwm(PIN_SERVO_UD, 0);
     Timer1.pwm(PIN_SERVO_LR, 0);
 
-    filePages[1].kjNxt = 0xFEFE;
-    Serial.println(filePages[1].kjNxt);
+    filePages[7] = {0x1883,
+                    0x0000,
+                    0x0000,
+                    0x0008};
 
-    for (int i = 0; i < 64; i++)
-    {
-    }
-    Serial.println(filePages[1].kjNxt);
-
-    Serial.println(filePages[61].cbaFre);
-
-    //findFile("home");
+    char test[30] = "                             ";
+    sprintFileAddress(&test[0], 7, 30);
+    Serial.println(test);
+    findFile("home");
 }
 
 void loop()
