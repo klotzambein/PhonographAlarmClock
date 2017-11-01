@@ -15,7 +15,7 @@ void settupClock(bool enable, Time *time, bool sqwDefault, bool sqwEnable, uint8
 {
     Wire.beginTransmission(CLOCK_ADDRESS);
     Wire.write(0);
-    Wire.write((time->seconds & 0x7F) | (enable ? 0x80 : 0x00));
+    Wire.write((time->seconds & 0x7F) | (enable ? 0x00 : 0x80));
     Wire.write(time->minutes & 0x7F);
     Wire.write(time->hours & 0x3F);
     Wire.write(time->day & 0x07);
