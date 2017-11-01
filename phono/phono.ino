@@ -18,7 +18,7 @@ void setup()
     Serial.begin(9600);
 
     pinMode(13, OUTPUT);
-
+    
     Timer1.initialize(TIMER_INTERVAL);
     Timer1.attachInterrupt(tick);
     Timer1.pwm(PIN_SERVO_UD, 0);
@@ -33,11 +33,14 @@ void setup()
     sprintFileAddress(&test[0], 7, 30);
     Serial.println(test);
     findFile("home");
+
+    Time tim = {0x30, 0x25, 0x17, 0x1, 0x20, 0x02, 0x17};
+    settupClock(true, &tim, false, false, 0);
 }
 
 void loop()
 {
-    char s[22];
+    /*char s[22];
     s[21] = 0;
 
     Time t;
@@ -45,7 +48,16 @@ void loop()
 
     sprintTime(&s[0], &t);
     //Serial.println(s);
-    delay(5000);
+    delay(5000);*/
+
+    /*SetServoTarget(&servo_upDown, SERVO_MIN_DUTY);
+    delay(1000);
+    SetServoTarget(&servo_leftRight, SERVO_MIN_DUTY);
+    delay(1000);
+    SetServoTarget(&servo_upDown, SERVO_MAX_DUTY);
+    delay(1000);
+    SetServoTarget(&servo_leftRight, SERVO_MAX_DUTY);
+    delay(1000);*/
 }
 
 void tick()
