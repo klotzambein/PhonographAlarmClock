@@ -16,10 +16,11 @@ extern struct FilePages
     int556_t kjNxt;
 } filePages[64];
 
-
-int findFile(char *addr);
+int8_t findFile(char *addr);
 void deleteFile(uint8_t page);
+int8_t createFile(char *addr, uint16_t size);
 void saveFilePages();
+void saveFilePage(uint8_t page);
 void loadFilePages();
 int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength);
 

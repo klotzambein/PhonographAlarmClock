@@ -11,10 +11,11 @@ bool get_isPageFree(uint8_t page);
 bool get_nxtPage(uint8_t page);
 void get_5biChars(uint8_t *buffer, uint8_t page);
 bool checkFile(char *addr, uint8_t page);
+bool writePage(char *addr, uint8_t nxt, uint8_t page);
 
 FilePages filePages[64];
 
-int findFile(char *addr)
+int8_t findFile(char *addr)
 {
     for (int i = 0; i < 64; i++)
     {
@@ -28,17 +29,45 @@ int findFile(char *addr)
 
 void deleteFile(uint8_t page)
 {
-    uint8_t nxt;
     while (true)
     {
         filePages[page].cbaFre &= 0x0001;
-        nxt = get_nxtPage(page);
+        uint8_t nxt = get_nxtPage(page);
+
         if (nxt == page)
+        {
+            saveFilePage(page);
             break;
+        }
+
         filePages[page].kjNxt = (filePages[page].kjNxt & 0xFFC0) | page;
+        saveFilePage(page);
+
         page = nxt;
     }
-    saveFilePages();
+}
+
+int8_t createFile(char *addr, uint16_t size)
+{
+    size >>= 8;
+    int8_t freePages[size];
+    for (int i = 0, j = 0; j < size; i++)
+    {
+        if (i >= 64)
+            return -1;
+        if (get_isPageFree(i))
+            freePages[j++] = i;
+    }
+    for (int i = 0; i < size - 1; i++)
+    {
+        if (writePage(addr, freePages[i + 1], freePages[i]))
+            addr = &TEXT_ZERO;
+        else
+            addr += 11;
+        saveFilePage(freePages[i]);
+    }
+    writePage(addr, freePages[size - 1], freePages[size - 1]);
+    saveFilePage(freePages[size - 1]);
 }
 
 int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength)
@@ -59,6 +88,10 @@ int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength)
 void saveFilePages()
 {
     EEPROM.put(FILE_PAGES_EEPROM_ADDRESS, filePages);
+}
+void saveFilePage(uint8_t page)
+{
+    EEPROM.put(FILE_PAGES_EEPROM_ADDRESS + page * 8, filePages[page]);
 }
 
 void loadFilePages()
@@ -85,6 +118,21 @@ bool checkFile(char *addr, uint8_t page)
     if (nxt == page)
         return *(addr + 12) == 0;
     return checkFile(addr + 11, nxt);
+}
+
+bool writePage(char *addr, uint8_t nxt, uint8_t page)
+{
+    uint8_t b[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int i = 0;
+    for (; i < 11 && addr[i] != 0; i++)
+        b[i] = to5bitChar(addr[i]);
+
+    filePages[page].cbaFre = b[0] << 1 & b[1] << 6 & b[2] << 11 & 0x0001;
+    filePages[page].fed = b[3] << 1 & b[4] << 6 & b[5] << 11;
+    filePages[page].ihg = b[6] << 1 & b[7] << 6 & b[8] << 11;
+    filePages[page].kjNxt = b[9] << 6 & b[10] << 11 & nxt;
+
+    return i < 11;
 }
 
 bool get_isPageFree(uint8_t page)

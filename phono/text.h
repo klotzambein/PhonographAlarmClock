@@ -4,6 +4,8 @@
 #import "Arduino.h"
 #import "makro.h"
 
+extern const char TEXT_ZERO;
+
 int sprintHex(char *str, uint8_t number);
 
 inline int sprintString(char *str, char *srcStr, size_t size)

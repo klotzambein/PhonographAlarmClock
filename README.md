@@ -19,3 +19,4 @@ The circuit consist of an Arduino Uno which is connected to two servos controlli
 
 # Notes
 - CPU on Phonograph: [Datasheet](http://datasheetz.com/data/Integrated%20Circuits%20(ICs)/Microcontrollers/D13008F25V-datasheetz.html)
+- [AT Commands](https://room-15.github.io/blog/2015/03/26/esp8266-at-command-reference/)

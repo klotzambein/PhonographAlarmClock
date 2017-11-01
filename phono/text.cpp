@@ -1,5 +1,7 @@
 #import "text.h"
 
+const char TEXT_ZERO = 0;
+
 char ToHex(uint8_t number)
 {
     switch (number & 0x0F)
