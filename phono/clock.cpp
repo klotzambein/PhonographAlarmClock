@@ -3,6 +3,25 @@
 #import <Wire.h>
 #import "text.h"
 
+bool checkTime(uint8_t hours, uint8_t minutes);
+
+Time currentTime;
+uint8_t lastSeconds = 0xFF;
+
+Alarm alarm[ALARM_COUNT];
+
+bool updateClock()
+{
+    readClock(&currentTime);
+
+    if (currentTime.seconds < lastSeconds)
+        return testAlarms();
+
+    lastSeconds = currentTime.seconds;
+
+    return false;
+}
+
 void writeToClock(uint8_t addr, const uint8_t *data, uint16_t size)
 {
     Wire.beginTransmission(CLOCK_ADDRESS);
@@ -33,7 +52,7 @@ void readClock(Time *time)
     Wire.endTransmission();
 
     Wire.requestFrom(CLOCK_ADDRESS, 7);
-    
+
     time->seconds = Wire.read() & 0x7F;
     time->minutes = Wire.read() & 0x7F;
     time->hours = Wire.read() & 0x3F;
@@ -41,6 +60,124 @@ void readClock(Time *time)
     time->date = Wire.read() & 0x3F;
     time->month = Wire.read() & 0x1F;
     time->year = Wire.read();
+}
+
+void readAlarms()
+{
+    for (int i = 0; i < ALARM_COUNT; i++)
+    {
+        Wire.beginTransmission(CLOCK_ADDRESS);
+        Wire.write(ALARM_SAVE_OFFSET + (i * sizeof(Alarm)));
+        Wire.endTransmission();
+
+        Wire.requestFrom(CLOCK_ADDRESS, sizeof(Alarm));
+        uint8_t data[4] = {Wire.read(),
+                           Wire.read(),
+                           Wire.read(),
+                           Wire.read()};
+
+        alarms[i].type = data[0] & 0x03;
+        alarms[i].enabled = data[0] & 0x02 >> 1;
+        switch (alarms[i].type)
+        {
+        case 1:
+            alarms[i].atTime.hours = data[1];
+            alarms[i].atTime.minutes = data[2];
+            break;
+        case 2:
+            alarms[i].atTimeDay.dayMask = data[1];
+            alarms[i].atTimeDay.hours = data[2];
+            alarms[i].atTimeDay.minutes = data[3];
+            break;
+        case 3:
+            alarms[i].atWifiEvent.eventID = data[1];
+            break;
+        }
+    }
+}
+
+int addAlarm(Alarm *alarm)
+{
+    for (int i = 0; i < ALARM_COUNT; i++)
+    {
+        if (alarms[i].type == 0)
+        {
+            alarms[i] = *alarm;
+            saveAlarm(i);
+            return i;
+        }
+    }
+    return -1;
+}
+
+void updateAlarm(int alarm, Alarm *newAlarm)
+{
+    alarms[alarm] = *newAlarm;
+    saveAlarm(alarm);
+}
+
+void removeAlarm(int alarm)
+{
+    alarms[alarm].type = 0;
+    saveAlarm(i);
+}
+
+void enableAlarm(int alarm)
+{
+    alarms[alarm].enabled = 1;
+    saveAlarm(alarm);
+}
+
+void disableAlarm(int alarm)
+{
+    alarms[alarm].enabled = 0;
+    saveAlarm(alarm);
+}
+
+bool testAlarms()
+{
+    for (int i = 0; i < ALARM_COUNT; i++)
+    {
+        if (alarms[i].enabled)
+            switch (alarms[i].type)
+            {
+            case 0:
+            case 3:
+                continue;
+            case 1:
+                if (checkTime(alarms[i].atTime.hours, alarms[i].atTime.minutes))
+                    return true;
+                else
+                    continue;
+            case 2:
+                if (checkTime(alarms[i].atTimeDay.hours, alarms[i].atTimeDay.minutes) &&
+                    alarms[i].atTimeDay.dayMask & (0x1 << currentTime.day))
+                    return true;
+                else
+                    continue;
+            }
+    }
+    return false;
+}
+
+bool testWifiAlarms(uint8_t event)
+{
+    for (int i = 0; i < ALARM_COUNT; i++)
+        if (alarms[i].type == 3 &&
+            alarms[i].enabled &&
+            alarms[i].atWifiEvent.eventID == event)
+            return true;
+}
+
+void saveAlarms()
+{
+    for (int i = 0; i < ALARM_COUNT; i++)
+        writeToClock(ALARM_SAVE_OFFSET + i, (uint8_t *)&alarms[i], sizeof(Alarm));
+}
+
+void saveAlarm(int alarm)
+{
+    writeToClock(ALARM_SAVE_OFFSET + alarm, (uint8_t *)&alarms[alarm], sizeof(Alarm));
 }
 
 int sprintWeekday(char *str, unsigned int day)
@@ -88,4 +225,39 @@ int sprintTime(char *str, Time *time)
     WRITE2STR('/')
     str += sprintHex(str, time->year);
     return 21;
+}
+
+int sprintAlarm(char *str, Alarm *alarm)
+{
+    switch (alarm->type)
+    {
+    case 0:
+        return sprintString(str, "No-Alarm", 8);
+    case 1:
+        WRITE2STR('7', 'F', '-')
+        str += sprintHex(str, alarm->atTime.hours);
+        WRITE2STR(':')
+        str += sprintHex(str, alarm->atTime.minutes);
+        return 8;
+    case 2:
+        str += sprintHex(str, alarm->atTimeDay.dayMask);
+        WRITE2STR('-')
+        str += sprintHex(str, alarm->atTimeDay.hours);
+        WRITE2STR(':')
+        str += sprintHex(str, alarm->atTimeDay.minutes);
+        return 8;
+    case 3:
+        WRITE2STR('W', 'i', 'F', 'i', '0', 'x')
+        str += sprintHex(str, alarm->atWifiEvent.eventID);
+        return 8;
+    }
+    return 0;
+}
+
+//---------------------------------
+
+bool checkTime(uint8_t hours, uint8_t minutes)
+{
+    return currentTime.hours & 0x3F == hours & 0x3F &&
+           currentTime.minutes & 0x7F == minutes & 0x7F;
 }
