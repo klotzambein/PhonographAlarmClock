@@ -70,6 +70,12 @@ int8_t createFile(char *addr, uint16_t size)
     saveFilePage(freePages[size - 1]);
 }
 
+bool writeToFile(uint8_t page, uint16_t offset, uint16_t size)
+{
+    /*page += offset >> 8;
+    for (int i = 0; i < )*/
+}
+
 int sprintFileAddress(char *str, uint8_t page, uint8_t maxLength)
 {
     uint8_t buffer[11];

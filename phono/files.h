@@ -3,7 +3,7 @@
 
 #import "Arduino.h"
 
-#define FILE_STORAGE_ADDRESS 0x68
+#define FILE_STORAGE_ADDRESS 0x0 //TODO
 #define FILE_PAGES_EEPROM_ADDRESS 512
 
 typedef uint16_t int5551_t;
@@ -19,6 +19,7 @@ extern struct FilePages
 int8_t findFile(char *addr);
 void deleteFile(uint8_t page);
 int8_t createFile(char *addr, uint16_t size);
+bool writeToFile(uint8_t page, uint16_t offset, uint16_t size);
 void saveFilePages();
 void saveFilePage(uint8_t page);
 void loadFilePages();
