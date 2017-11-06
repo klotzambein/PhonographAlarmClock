@@ -7,6 +7,7 @@
 extern const char TEXT_ZERO;
 
 int sprintHex(char *str, uint8_t number);
+int sprintJsonString(char *str, char *name, char *content);
 
 inline int sprintString(char *str, char *srcStr, size_t size)
 {

@@ -46,3 +46,13 @@ int sprintHex(char *str, uint8_t number)
     WRITE2STR(ToHex(number >> 4), ToHex(number))
     return 2;
 }
+
+int sprintJsonString(char *str, char *name, int nameSize, char *content, int contentSize)
+{
+    WRITE2STR('"')
+    str += sprintString(str, name, nameSize);
+    WRITE2STR('"', ':', '"')
+    str += sprintString(str, content, contentSize);
+    WRITE2STR('"', ';')
+    return 6 + nameSize + contentSize;
+}
